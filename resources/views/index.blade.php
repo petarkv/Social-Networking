@@ -1,3 +1,6 @@
+<?php
+use App\User;
+?>
 @extends('layouts.frontLayout.front_design')
 @section('content')
 
@@ -91,7 +94,18 @@
                 <p class="right">@if(!empty($user->details->city)) {{ $user->details->city }} @endif</p>
                 <p class="left">Interest:</p>
                 <p class="right">Dating</p>
-                <a href="#"><img src="images/frontend_images/more_btn.gif" alt="" class="more_1" /></a> 
+                <p class="left">Status:</p>
+                <p class="right">
+                  <?php 
+                  $isOnline = User::isOnline($user->id); 
+                  if ($isOnline) {
+                    echo "<font color='green'><strong>Online</strong></font>";
+                  }else {
+                    echo "<font color='red'><strong>Offline</strong></font>";
+                  }
+                  ?>
+                </p>
+                <a href="#"><img src="images/frontend_images/more_btn.gif" alt="" class="more_1" style="margin-top: 15px;"/></a> 
               </div>
             @endif
             <?php $count = $count+1; ?>

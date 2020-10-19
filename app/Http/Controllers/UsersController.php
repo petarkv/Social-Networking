@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Auth;
 use Session;
 use Image;
+use Cache;
 use App\User;
 use App\UsersDetail;
 use App\Country;
@@ -210,9 +211,13 @@ class UsersController extends Controller
 
                 if (preg_match("/contact/i", Session::get('current_url'))) {
 					Session::put('frontSession',$data['username']);
-					return redirect('/step/2');
+					//return redirect('/step/2');
                     return redirect(Session::get('current_url'));
-                } else {
+                }else if (preg_match("/add-new-friend/i", Session::get('current_url'))) {
+                    Session::put('frontSession',$data['username']);
+                    //return redirect('/step/2');
+                    return redirect(Session::get('current_url'));
+                }else {
                     Session::put('frontSession',$data['username']);
                     return redirect('/step/2');
                 }
@@ -224,6 +229,7 @@ class UsersController extends Controller
     }
 
     public function logout(){
+        Cache::flush();
         Auth::logout();
         Session::forget('frontSession');
         // Session::forget('current_url');
@@ -320,26 +326,29 @@ class UsersController extends Controller
         } 
 
         // View Friends List
-        // $friend_id = User::getUserId($username);
-        // $friendCount1 = Friend::where(['friend_id'=>$friend_id,'accept'=>1])->count();
-        // if ($friendCount1>0) {
-        //     $friend_ids1 = Friend::select('user_id')->where(['friend_id'=>$friend_id,'accept'=>1])->get();
-        //     $friend_ids1 = Arr::flatten(json_decode(\json_encode($friend_ids1),true));
-        //     // echo "<pre>"; print_r($friend_ids1);
-        // }
-        // $friendCount2 = Friend::where(['user_id'=>$friend_id,'accept'=>1])->count();
-        // if ($friendCount2>0) {
-        //     $friend_ids2 = Friend::select('friend_id')->where(['user_id'=>$friend_id,'accept'=>1])->get();
-        //     $friend_ids2 = Arr::flatten(json_decode(\json_encode($friend_ids2),true));
-        //     // echo "<pre>"; print_r($friend_ids2); die;
-        // }
-        // $friends_ids = array_merge($friend_ids1,$friend_ids2);
-        // // echo "<pre>"; print_r($friend_ids); die;
+        $friend_id = User::getUserId($username);
+        $friendCount1 = Friend::where(['friend_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids1 = array();
+        if ($friendCount1>0) {            
+            $friend_ids1 = Friend::select('user_id')->where(['friend_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids1 = Arr::flatten(json_decode(\json_encode($friend_ids1),true));
+            // echo "<pre>"; print_r($friend_ids1);
+        }
+        $friendCount2 = Friend::where(['user_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids2 = array();
+        if ($friendCount2>0) {            
+            $friend_ids2 = Friend::select('friend_id')->where(['user_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids2 = Arr::flatten(json_decode(\json_encode($friend_ids2),true));
+            // echo "<pre>"; print_r($friend_ids2); die;
+        }
+        $friends_ids = array();
+        $friends_ids = array_merge($friend_ids1,$friend_ids2);
+        // echo "<pre>"; print_r($friend_ids); die;
 
-        // $friendsList = User::with('details')->with('photos')->whereIn('id',$friends_ids)->
-        //     orderBy('id','Desc')->get();
-        // $friendsList = json_decode(json_encode($friendsList));
-        return view('users.profile')->with(compact('userDetails','friendrequest'/* ,'friendsList' */));
+        $friendsList = User::with('details')->with('photos')->whereIn('id',$friends_ids)->
+            orderBy('id','Desc')->get();
+        $friendsList = json_decode(json_encode($friendsList));
+        return view('users.profile')->with(compact('userDetails','friendrequest','friendsList'));
     }
 
     public function contactProfile(Request $request,$username){
@@ -374,6 +383,33 @@ class UsersController extends Controller
             $friend->friend_id = $friend_id;
             $friend->save();
             return \redirect()->back();
+        }else{
+            abort(404);    
+        }       
+    }
+
+    public function addNewFriend($username){
+        $userCount = User::where('username',$username)->count();
+        $userName = User::select('name')->where('username',$username)->first();
+        if($userCount>0){
+            $user_id = Auth::user()->id;
+            $friend_id = User::getUserId($username);
+
+            // Check if already friends or friend request sent
+            $friendCount1 = Friend::where(['friend_id'=>$friend_id,'user_id'=>$user_id])->count();
+            if ($friendCount1>0) {
+                return redirect('profile/'.$username);
+            }
+            $friendCount2 = Friend::where(['user_id'=>$friend_id,'friend_id'=>$user_id])->count();
+            if ($friendCount2>0) {
+                return redirect('profile/'.$username);
+            }
+
+            $friend = new Friend;
+            $friend->user_id = $user_id;
+            $friend->friend_id = $friend_id;
+            $friend->save();
+            return redirect('profile/'.$username);
         }else{
             abort(404);    
         }       
@@ -441,32 +477,40 @@ class UsersController extends Controller
     }
 
     public function friends(){
-        $user_id = Auth::user()->id;
-        $friendsCount = Friend::where(['friend_id'=>$user_id,'accept'=>1])->count();
-        if($friendsCount>0){
-            $friends = Friend::where(['friend_id'=>$user_id,'accept'=>1])->get();
-        }else{
-            $friends = Friend::where(['user_id'=>$user_id,'accept'=>1])->get();
-        }        
-        $friends = json_decode(json_encode($friends));
+        // $user_id = Auth::user()->id;
+        // $friendsCount = Friend::where(['friend_id'=>$user_id,'accept'=>1])->count();
+        // if($friendsCount>0){
+        //     $friends = Friend::where(['friend_id'=>$user_id,'accept'=>1])->get();
+        // }else{
+        //     $friends = Friend::where(['user_id'=>$user_id,'accept'=>1])->get();
+        // }        
+        // $friends = json_decode(json_encode($friends));
         // echo "<pre>"; print_r($friends); die;
 
-        // $friend_id = Auth::user()->id;
-        // $friendCount1 = Friend::where(['friend_id'=>$friend_id,'accept'=>1])->count();
-        // if ($friendCount1>0) {
-        //     $friend_ids1 = Friend::select('user_id')->where(['friend_id'=>$friend_id,'accept'=>1])->get();
-        //     $friend_ids1 = Arr::flatten(json_decode(\json_encode($friend_ids1),true));
-        //     // echo "<pre>"; print_r($friend_ids1); //die;
-        // }
-        // $friendCount2 = Friend::where(['user_id'=>$friend_id,'accept'=>1])->count();
-        // if ($friendCount2>0) {
-        //     $friend_ids2 = Friend::select('friend_id')->where(['user_id'=>$friend_id,'accept'=>1])->get();
-        //     $friend_ids2 = Arr::flatten(json_decode(\json_encode($friend_ids2),true));
-        //     // echo "<pre>"; print_r($friend_ids2); die;
-        // }
-        // $friends_ids = array_merge($friend_ids1,$friend_ids2);
+        // User Friends List
+        $friend_id = Auth::user()->id;
+        $friendCount1 = Friend::where(['friend_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids1 = array();
+        if ($friendCount1>0) {
+            $friend_ids1 = Friend::select('user_id')->where(['friend_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids1 = Arr::flatten(json_decode(\json_encode($friend_ids1),true));
+            // echo "<pre>"; print_r($friend_ids1); //die;
+        }
+        $friendCount2 = Friend::where(['user_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids2 = array();
+        if ($friendCount2>0) {
+            $friend_ids2 = Friend::select('friend_id')->where(['user_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids2 = Arr::flatten(json_decode(\json_encode($friend_ids2),true));
+            // echo "<pre>"; print_r($friend_ids2); die;
+        }
+        $friends_ids = array();
+        $friends_ids = array_merge($friend_ids1,$friend_ids2);
 
-        return \view('users.friends')->with(\compact('friends'));
+        $friendsList = User::with('details')->with('photos')->whereIn('id',$friends_ids)->
+             orderBy('id','Desc')->get();
+        $friendsList = json_decode(json_encode($friendsList));
+
+        return \view('users.friends')->with(\compact(/* 'friends', */'friendsList'));
     }
 
     public function acceptFriendRequest($sender_id){

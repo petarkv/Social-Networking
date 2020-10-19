@@ -12,6 +12,7 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        "update-response"
+        "update-response","chat/sendMessage","chat/isTyping","chat/notTyping",
+        "chat/retrieveChatMessages","chat/retrieveTypingStatus"
     ];
 }

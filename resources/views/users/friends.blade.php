@@ -30,33 +30,43 @@ use App\User;
         </thead>
         <tbody>
 
-            @foreach($friends as $friend)
+            {{-- @foreach($friends as $friend) --}}
+            @foreach($friendsList as $friend)
             <?php
-            if(Auth::user()->id!=$friend->user_id){
-                $sender_name = User::getName($friend->user_id);
-                $sender_surname = User::getSurname($friend->user_id);
-                $sender_city = User::getCity($friend->user_id);
-                $sender_username = User::getUsername($friend->user_id);
-            }else{
-                $sender_name = User::getName($friend->friend_id);
-                $sender_surname = User::getSurname($friend->friend_id);
-                $sender_city = User::getCity($friend->friend_id);
-                $sender_username = User::getUsername($friend->friend_id);
-            }
+            // if(Auth::user()->id!=$friend->user_id){
+                // $sender_name = User::getName($friend->user_id);
+                // $sender_surname = User::getSurname($friend->user_id);
+                // $sender_city = User::getCity($friend->user_id);
+                // $sender_username = User::getUsername($friend->user_id);
+            // }else{
+            //     $sender_name = User::getName($friend->friend_id);
+            //     $sender_surname = User::getSurname($friend->friend_id);
+            //     $sender_city = User::getCity($friend->friend_id);
+            //     $sender_username = User::getUsername($friend->friend_id);
+            // } 
             
+            
+                $sender_name = User::getName($friend->id);
+                $sender_surname = User::getSurname($friend->id);
+                $sender_city = User::getCity($friend->id);
+                $sender_username = User::getUsername($friend->id);
             ?>
+            
             <tr align="center">                
                 <td><a target="_blank" href="{{ url('profile/'.$sender_username) }}">{{ $sender_name }} {{ $sender_surname }}</a></td>
                 <td>{{ $sender_city }}</td>                
                 <td>{{ $friend->created_at }}</td> 
                 <td> 
-                    @if(Auth::user()->id!=$friend->user_id)                  
+                    {{-- @if(Auth::user()->id!=$friend->user_id)                  
                         <a href="{{ url('reject-friend-request/'.$friend->user_id) }}">
                             <i class="fa fa-times-circle" aria-hidden="true" style="color: red;"></i></a>
                     @else
                         <a href="{{ url('reject-friend-request/'.$friend->friend_id) }}">
                             <i class="fa fa-times-circle" aria-hidden="true" style="color: red;"></i></a>
-                    @endif
+                    @endif --}}
+
+                    <a href="{{ url('reject-friend-request/'.$friend->id) }}">
+                        <i class="fa fa-times-circle" aria-hidden="true" style="color: red;"></i></a>
                 </td>
             </tr>
             @endforeach
