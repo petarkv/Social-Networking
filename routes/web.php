@@ -27,8 +27,22 @@ Route::get('/','IndexController@index');
 #USER REGISTER
 Route::any('/register','UsersController@register');
 
+#LIVE CHAT
+// Route::get('/chat/{username}',function($username){
+//     return view('users.chat')->with(compact('username'));
+// });
+
+
 
 Route::group(['middleware'=>['frontlogin']],function(){
+
+    #CHAT
+    Route::get('/chat/{username}','ChatController@userChatBox');
+    Route::post('/chat/sendMessage','ChatController@sendMessage');
+    Route::post('/chat/isTyping', 'ChatController@isTyping');
+    Route::post('/chat/notTyping', 'ChatController@notTyping');
+    Route::post('/chat/retrieveChatMessages', 'ChatController@retrieveChatMessages');
+    Route::post('/chat/retrieveTypingStatus', 'ChatController@retrieveTypingStatus');
 
     #LOGIN USER STEP 2
     Route::any('/step/2','UsersController@step2');
@@ -62,6 +76,8 @@ Route::group(['middleware'=>['frontlogin']],function(){
     Route::match(['get','post'],'/contact/{username}','UsersController@contactProfile');
     #ADD FRIEND
     Route::match(['get','post'],'/add-friend/{username}','UsersController@addFriend');
+    #ADD NEW FRIEND
+    Route::match(['get','post'],'/add-new-friend/{username}','UsersController@addNewFriend');
     #REMOVE FRIEND
     Route::match(['get','post'],'/remove-friend/{username}','UsersController@removeFriend');
     

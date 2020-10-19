@@ -153,9 +153,19 @@ $datingProfile = User::datingProfileDetails(Auth::User()['id']);
       </form>
     </div>
   </div>
-
   <div class="dating_news">
-    <h2>dating news </h2>
+    <h2>Chat Room </h2>
+    @if(Auth::check() && $datingCount==1)
+      <h3><a href="{{ url('chat/'.Auth::User()['username']) }}" target="_blank">Live Chat Room</a></h3>
+    @endif
+    <div class="news_detail">
+      <iframe src="https://www5.cbox.ws/box/?boxid=921956&boxtag=LxrvP9" width="100%" height="450" 
+      allowtransparency="yes" allow="autoplay" frameborder="0" marginheight="0" marginwidth="0" 
+      scrolling="auto"></iframe>
+    </div>	
+  </div>
+  <div class="dating_news">
+    <h2>News </h2>
     <div class="news_detail">
       <p class="date">18th January, ‘09</p>
       <p class="detail">Nunc viverra. Aliquam suscipit egestas turpis. Aenean mollis est. 

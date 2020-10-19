@@ -1,3 +1,6 @@
+<?php
+use App\User;
+?>
 @extends('layouts.frontLayout.front_design')
 @section('content')
   <div id="right_container">
@@ -56,32 +59,48 @@
                     <i class="fa fa-comment" aria-hidden="true" style="color: red"></i>&nbsp;&nbsp;Contact Profile</a>
               @endif
             </strong><br>
+            <strong style="float: right; margin-top: 70px; margin-right: -220px;">
+              <?php 
+                $isOnline = User::isOnline($userDetails->id); 
+                if ($isOnline) {
+                  echo "<font color='green'><strong><i class='fa fa-user-o' aria-hidden='true'></i>
+                        Online</strong></font>";
+                }else {
+                  echo "<font color='red'><strong><i class='fa fa-user-o' aria-hidden='true'></i>
+                        Offline</strong></font>";
+                }
+              ?>
+            </strong>
             @if(!empty($friendrequest)) 
               @if(Auth::check())
                 @if(Auth::User()->username != $userDetails->username)             
                   <strong style="float:right;">
                     @if($friendrequest=="Add Friend")
                       <a href="{{ url('/add-friend/'.$userDetails->username) }}" style="color: green; float: right; 
-                          margin-top: 70px; margin-right: -220px;">
+                          margin-top: 85px;; margin-right: -220px;">
                       <i class="fa fa-user-plus" aria-hidden="true" style="color: green"></i>&nbsp;&nbsp;{{ $friendrequest }}</a>
                     @elseif($friendrequest=="Friends (Unfriend)")
                       <a href="{{ url('/remove-friend/'.$userDetails->username) }}" style="color: green; float: right; 
-                        margin-top: 70px; margin-right: -220px;">
+                        margin-top: 85px;; margin-right: -220px;">
                       <i class="fa fa-minus-circle" aria-hidden="true" style="color: green"></i>&nbsp;&nbsp;{{ $friendrequest }}</a> 
                     @elseif($friendrequest=="Confirm Friend Request")
                       <a href="{{ url('/confirm-friend-request/'.$userDetails->username) }}" style="color: green; float: right; 
-                        margin-top: 70px; margin-right: -220px;">
+                        margin-top: 85px;; margin-right: -220px;">
                       <i class="fa fa-minus-circle" aria-hidden="true" style="color: green"></i>&nbsp;&nbsp;{{ $friendrequest }}</a>               
                     @else
-                      <span style="color: green; float: right; margin-top: 70px; margin-right: -220px;">
+                      <span style="color: green; float: right; margin-top: 85px;; margin-right: -220px;">
                       <i class="fa fa-user-plus" aria-hidden="true"></i>&nbsp;&nbsp;{{ $friendrequest }}</span>  
                     @endif
                   </strong>
                 @endif
                 <br />
                 <br />
-                <div class="clear"></div>
-                @endif
+                <div class="clear"></div>                            
+              @endif 
+              <div class="clear"></div>              
+            @else
+              <strong style="float: right; margin-top: 90px;; margin-right: -220px;">
+                <a href="" onclick="return loginuser();" style="color: green;">Add Friend</a></strong>
             @endif
           </div>
           <div class="clear"></div>
@@ -110,8 +129,9 @@
           </div> 
           <div class="clear"></div>
           <div>
-            <h6 class="inner">My Friends</h6>
-            {{-- <div class="recent_add_prifile">
+            <h6 class="inner" style="margin-top: 20px;">My Friends</h6>
+            <div class="recent_add_prifile">
+              @if(count($friendsList)>0)
               <?php $count=1; ?>
               @foreach($friendsList as $user)
                 @if(!empty($user->details) && $user->details->status == 1)
@@ -189,7 +209,10 @@
                   @endif
                 @endif
               @endforeach
-            </div> --}}
+              @else
+                <h6>No Friends</h6>
+              @endif
+            </div>
           </div>        
         </div>
       </div>
@@ -198,3 +221,10 @@
 @section('title')
 {{ $userDetails->name }}'s Profile
 @endsection
+
+<script>
+  function loginuser(){
+    alert("Please login to Add Friend");
+    window.location = "/add-new-friend/<?php echo $userDetails->username; ?>";
+  }
+</script>
