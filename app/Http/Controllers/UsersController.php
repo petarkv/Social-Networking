@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Redirect;
 use App\Response;
 use App\Friend;
 use Illuminate\Support\Arr;
+use App\Favorite;
 
 class UsersController extends Controller
 {
@@ -217,6 +218,10 @@ class UsersController extends Controller
                     Session::put('frontSession',$data['username']);
                     //return redirect('/step/2');
                     return redirect(Session::get('current_url'));
+                }else if (preg_match("/add-new-favorite/i", Session::get('current_url'))) {
+                    Session::put('frontSession',$data['username']);
+                    //return redirect('/step/2');
+                    return redirect(Session::get('current_url'));
                 }else {
                     Session::put('frontSession',$data['username']);
                     return redirect('/step/2');
@@ -315,12 +320,30 @@ class UsersController extends Controller
                         }
                         
                     }else{
-                        $friendrequest = "Add Friend";
+                        $friendrequest = "";
                     }                    
                 }
             }else{
                 $friendrequest = "";
-            }           
+            } 
+
+            if(Auth::check()){
+                $user_id = Auth::user()->id;
+                $favorite_id = User::getUserId($username);
+
+                // Check if already favorite
+                $favoriteCount = Favorite::where(['favorite_id'=>$favorite_id,'user_id'=>$user_id])->count();
+                if ($favoriteCount>0) {
+                    $favorite = "Favorite Profile";
+                }else{
+                    $favorite = "Add Favorite";
+                } 
+
+            }else{
+                $favorite = "Add Favorite";
+            }
+            
+            
         }else{
             abort(404);    
         } 
@@ -344,11 +367,20 @@ class UsersController extends Controller
         $friends_ids = array();
         $friends_ids = array_merge($friend_ids1,$friend_ids2);
         // echo "<pre>"; print_r($friend_ids); die;
-
+        
         $friendsList = User::with('details')->with('photos')->whereIn('id',$friends_ids)->
             orderBy('id','Desc')->get();
         $friendsList = json_decode(json_encode($friendsList));
-        return view('users.profile')->with(compact('userDetails','friendrequest','friendsList'));
+
+        // List of Favorite Users
+        $profile_id = User::getUserId($username);
+        $favorite_ids = Favorite::select('favorite_id')->where('user_id',$profile_id)->get();
+        $favorite_ids = Arr::flatten(json_decode(\json_encode($favorite_ids),true));
+
+        $favoriteList = User::with('details')->with('photos')->whereIn('id',$favorite_ids)->orderBy('id','Desc')->get();
+        $favoriteList = json_decode(\json_encode($favoriteList));
+
+        return view('users.profile')->with(compact('userDetails','friendrequest','friendsList','favorite','favoriteList'));
     }
 
     public function contactProfile(Request $request,$username){
@@ -378,7 +410,7 @@ class UsersController extends Controller
         if($userCount>0){
             $user_id = Auth::user()->id;
             $friend_id = User::getUserId($username);
-            $friend = new Friend;
+            $favorite = new Friend;
             $friend->user_id = $user_id;
             $friend->friend_id = $friend_id;
             $friend->save();
@@ -410,6 +442,29 @@ class UsersController extends Controller
             $friend->friend_id = $friend_id;
             $friend->save();
             return redirect('profile/'.$username);
+        }else{
+            abort(404);    
+        }       
+    }
+
+    public function addNewFavorite($username){
+        $userCount = User::where('username',$username)->count();
+        $userName = User::select('name')->where('username',$username)->first();
+        if($userCount>0){
+            $user_id = Auth::user()->id;
+            $favorite_id = User::getUserId($username);
+
+            // Check if already favorite
+            $favoriteCount = Favorite::where(['favorite_id'=>$favorite_id,'user_id'=>$user_id])->count();
+            if ($favoriteCount>0) {
+                return redirect('profile/'.$username);
+            }            
+            
+            $favorite = new Favorite;
+            $favorite->user_id = $user_id;
+            $favorite->favorite_id = $favorite_id;
+            $favorite->save();
+            return redirect('profile/'.$username)->with('flash_message_success','User has been added as Favorite!');
         }else{
             abort(404);    
         }       
