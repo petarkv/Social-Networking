@@ -78,6 +78,8 @@ Route::group(['middleware'=>['frontlogin']],function(){
     Route::match(['get','post'],'/add-friend/{username}','UsersController@addFriend');
     #ADD NEW FRIEND
     Route::match(['get','post'],'/add-new-friend/{username}','UsersController@addNewFriend');
+    #ADD FAVORITE USER
+    Route::match(['get','post'],'/add-new-favorite/{username}','UsersController@addNewFavorite');
     #REMOVE FRIEND
     Route::match(['get','post'],'/remove-friend/{username}','UsersController@removeFriend');
     
